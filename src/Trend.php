@@ -23,6 +23,8 @@ class Trend
 
     public string $dateColumn = 'created_at';
 
+    public string $dateAlias = 'date';
+
     public function __construct(public Builder $builder)
     {
     }
@@ -94,17 +96,24 @@ class Trend
         return $this;
     }
 
+    public function dateAlias(string $alias): self
+    {
+        $this->dateAlias = $alias;
+
+        return $this;
+    }
+
     public function aggregate(string $column, string $aggregate): Collection
     {
         $values = $this->builder
             ->toBase()
             ->selectRaw("
-                {$this->getSqlDate()} as date,
+                {$this->getSqlDate()} as {$this->dateAlias},
                 {$aggregate}({$column}) as aggregate
             ")
             ->whereBetween($this->dateColumn, [$this->start, $this->end])
-            ->groupBy('date')
-            ->orderBy('date')
+            ->groupBy($this->dateAlias)
+            ->orderBy($this->dateAlias)
             ->get();
 
         return $this->mapValuesToDates($values);
